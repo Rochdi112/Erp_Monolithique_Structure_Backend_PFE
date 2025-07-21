@@ -5,6 +5,7 @@ from app.db.database import SessionLocal
 from app.schemas.user import TokenResponse
 
 router = APIRouter(
+    prefix="/auth",
     tags=["auth"],
     responses={404: {"description": "Not found"}}
 )

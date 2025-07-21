@@ -1,5 +1,14 @@
 from fastapi import APIRouter
-
+from .auth import router as auth_router
+...
+from .users import router as users_router
+from .techniciens import router as techniciens_router
+from .equipements import router as equipements_router
+from .interventions import router as interventions_router
+from .planning import router as planning_router
+from .notifications import router as notifications_router
+from .documents import router as documents_router
+from .filters import router as filters_router
 from app.api.v1 import (
     auth,
     users,

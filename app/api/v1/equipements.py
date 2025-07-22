@@ -1,5 +1,3 @@
-# app/api/v1/equipements.py
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
@@ -14,6 +12,7 @@ from app.services.equipement_service import (
 from app.core.rbac import responsable_required
 
 router = APIRouter(
+    prefix="/api/v1/equipements",
     tags=["equipements"],
     responses={404: {"description": "Équipement non trouvé"}}
 )
@@ -25,6 +24,9 @@ router = APIRouter(
     dependencies=[Depends(responsable_required)]
 )
 def create_new_equipement(data: EquipementCreate, db: Session = Depends(get_db)):
+    """
+    Crée un nouvel équipement (Accès : responsable).
+    """
     return create_equipement(db, data)
 
 @router.get(
@@ -33,6 +35,9 @@ def create_new_equipement(data: EquipementCreate, db: Session = Depends(get_db))
     summary="Lister les équipements"
 )
 def list_equipements(db: Session = Depends(get_db)):
+    """
+    Liste tous les équipements.
+    """
     return get_all_equipements(db)
 
 @router.get(
@@ -41,6 +46,9 @@ def list_equipements(db: Session = Depends(get_db)):
     summary="Détail d’un équipement"
 )
 def get_equipement(equipement_id: int, db: Session = Depends(get_db)):
+    """
+    Récupère le détail d'un équipement par son ID.
+    """
     return get_equipement_by_id(db, equipement_id)
 
 @router.delete(
@@ -49,5 +57,8 @@ def get_equipement(equipement_id: int, db: Session = Depends(get_db)):
     dependencies=[Depends(responsable_required)]
 )
 def delete_equipement_by_id(equipement_id: int, db: Session = Depends(get_db)):
+    """
+    Supprime un équipement par ID (Accès : responsable).
+    """
     delete_equipement(db, equipement_id)
     return {"detail": "Équipement supprimé avec succès."}

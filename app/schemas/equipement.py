@@ -1,13 +1,16 @@
-# app/schemas/equipement.py
-
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional
 
 class EquipementBase(BaseModel):
     nom: str
-    type_equipement: str = Field(..., alias="type")
+    type: str
     localisation: str
     frequence_entretien: Optional[str] = None
+
+    model_config = {
+        "from_attributes": True,
+        "validate_by_name": True
+    }
 
 class EquipementCreate(EquipementBase):
     pass
@@ -15,6 +18,7 @@ class EquipementCreate(EquipementBase):
 class EquipementOut(EquipementBase):
     id: int
 
-    class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+    model_config = {
+        "from_attributes": True,
+        "validate_by_name": True
+    }

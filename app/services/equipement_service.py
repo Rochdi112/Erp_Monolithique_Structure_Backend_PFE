@@ -1,17 +1,14 @@
-# app/services/equipement_service.py
-
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
 from app.models.equipement import Equipement
 from app.schemas.equipement import EquipementCreate
+from app.core.exceptions import NotFoundException, HTTPException
 
 def create_equipement(db: Session, data: EquipementCreate) -> Equipement:
-    existing = db.query(Equipement).filter(Equipement.nom == data.nom).first()
-    if existing:
+    if db.query(Equipement).filter(Equipement.nom == data.nom).first():
         raise HTTPException(status_code=400, detail="Équipement déjà existant")
     equipement = Equipement(
         nom=data.nom,
-        type=data.type_equipement,
+        type=data.type,
         localisation=data.localisation,
         frequence_entretien=data.frequence_entretien
     )
@@ -23,7 +20,7 @@ def create_equipement(db: Session, data: EquipementCreate) -> Equipement:
 def get_equipement_by_id(db: Session, equipement_id: int) -> Equipement:
     equipement = db.query(Equipement).filter(Equipement.id == equipement_id).first()
     if not equipement:
-        raise HTTPException(status_code=404, detail="Équipement introuvable")
+        raise NotFoundException("Équipement")
     return equipement
 
 def get_all_equipements(db: Session) -> list[Equipement]:

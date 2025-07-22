@@ -1,5 +1,3 @@
-# app/api/v1/interventions.py
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
@@ -11,10 +9,10 @@ from app.services.intervention_service import (
     get_all_interventions,
     update_statut_intervention
 )
-from app.core.rbac import get_current_user, technicien_required, responsable_required, admin_required
+from app.core.rbac import get_current_user, technicien_required, responsable_required
 
 router = APIRouter(
-    prefix="/interventions",
+    prefix="/api/v1/interventions",
     tags=["interventions"],
     responses={404: {"description": "Intervention non trouvée"}}
 )
@@ -33,8 +31,13 @@ def get_db():
     description="Crée une intervention préventive ou corrective. (admin, responsable uniquement)",
     dependencies=[Depends(responsable_required)]
 )
-def create_new_intervention(data: InterventionCreate, db: Session = Depends(get_db)):
-    return create_intervention(db, data)
+def create_new_intervention(
+    data: InterventionCreate,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user)  # Ajout utilisateur courant ici
+):
+    # 👇 Passe l'id du user authentifié au service
+    return create_intervention(db, data, user_id=int(user["user_id"]))
 
 @router.get(
     "/", 
@@ -72,6 +75,6 @@ def change_statut_intervention(
         db=db,
         intervention_id=intervention_id,
         new_statut=statut,
-        user_id=int(user["user_id"]),  # journalisation
+        user_id=int(user["user_id"]),
         remarque=remarque
     )

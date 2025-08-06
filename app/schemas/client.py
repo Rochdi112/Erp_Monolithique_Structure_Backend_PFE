@@ -1,3 +1,101 @@
+# 🚀 Prompt GitHub Copilot / ChatGPT — Génération de tous les schémas Pydantic (dossier schemas/)
+#
+# Objectif :
+# Génère pour chaque entité métier (User, Client, Contrat, Intervention, etc.) les schémas Pydantic adaptés à FastAPI :
+# - Clean code, production-ready, parfaitement typés, documentés et automatisés.
+# - Structure prête pour les endpoints CRUD et l’auto-doc OpenAPI.
+#
+# ---
+#
+# Contraintes & bonnes pratiques (à respecter dans chaque fichier schemas/) :
+#
+# 1. Imports Pydantic v2 et typing strict
+#    - from pydantic import BaseModel, ConfigDict, EmailStr, Field
+#    - from typing import Optional, List
+#    - Importer les enums et types liés depuis models/
+#
+# 2. Schémas structurés
+#    - Base : tous les champs communs (lecture/écriture, sans id ni dates)
+#    - Create : uniquement les champs nécessaires à la création
+#    - Update : tous les champs optionnels (pour PATCH/PUT partiel)
+#    - Out : tous les champs en lecture (PK, timestamps, relations…)
+#    - Pour chaque relation FK, inclure soit l’id, soit un schéma imbriqué Out résumé
+#
+# 3. Enums
+#    - Utiliser les mêmes enums Python que dans models/ pour la cohérence métier
+#
+# 4. Docstrings et exemples
+#    - Chaque schéma est commenté (contexte métier + utilité)
+#    - Ajoute un exemple de payload si utile (champ model_config = ConfigDict(from_attributes=True) dans chaque schéma Out)
+#
+# 5. Champs & typage
+#    - Utilise Optional[] pour tous les champs nullable
+#    - Dates au format datetime, mails en EmailStr, etc.
+#    - Les noms de champs sont toujours alignés avec ceux des models/
+#
+# 6. Extensibilité
+#    - Prépare tous les schémas pour extensions futures (audit, soft delete, pagination)
+#    - Permet l’imbrication de schémas Out pour les relations si besoin
+#
+# ---
+#
+# Exemple universel :
+#
+# """
+# Schémas Pydantic pour [NomModèle] : [Description métier].
+# """
+#
+# from pydantic import BaseModel, ConfigDict, EmailStr
+# from typing import Optional, List
+# from datetime import datetime
+# from app.models.[modele] import [Enum1], [Enum2]  # Si besoin
+#
+# class [NomModèle]Base(BaseModel):
+#     # Tous les champs principaux (lecture/écriture)
+#     ...
+#
+# class [NomModèle]Create([NomModèle]Base):
+#     # Seulement les champs nécessaires à la création
+#     ...
+#
+# class [NomModèle]Update(BaseModel):
+#     # Tous les champs optionnels
+#     ...
+#
+# class [NomModèle]Out([NomModèle]Base):
+#     id: int
+#     # Champs de relations imbriqués ou id simples
+#     date_creation: datetime
+#     # autres champs read-only
+#     model_config = ConfigDict(from_attributes=True)
+#
+# ---
+#
+# Checklist dans chaque fichier :
+#
+# * [ ] Tous les types et enums importés depuis models/
+# * [ ] Structure Base/Create/Update/Out respectée
+# * [ ] Typage strict et champs optionnels bien signalés
+# * [ ] Docstrings sur chaque schéma
+# * [ ] Schéma Out compatible ORM (model_config)
+# * [ ] Relations FK représentées par un schéma imbriqué Out ou un id
+# * [ ] Préparé pour extensions futures
+#
+# ---
+#
+# Utilise ce prompt pour chaque fichier dans schemas/ (user.py, client.py, contrat.py, intervention.py, etc.)
+# => Tu obtiendras un code Pydantic uniforme, clean, maintenable, prêt pour FastAPI et la documentation automatique.
+#
+# ---
+#
+# Besoin d’un exemple ultra-complet sur un modèle précis (User, Contrat, etc.) ? Demande-le, je te fournis le code clé-en-main adapté à ton projet.
+#
+# ---
+#
+# Ce prompt garantit que TOUS tes schémas seront générés selon les standards professionnels, sans lacune, et immédiatement exploitables sur un backend FastAPI moderne !
+#
+# ---
+
 # app/schemas/client.py
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator

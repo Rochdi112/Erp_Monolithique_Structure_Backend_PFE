@@ -1,0 +1,57 @@
+name: 🚀 Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '.github/**'
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🔧 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🧪 Run critical tests
+        run: |
+          pytest app/tests/test_auth.py app/tests/test_users.py --maxfail=1 -v
+
+      - name: 🐳 Build Docker image
+        run: |
+          docker build -t erp-backend:${{ github.sha }} .
+          docker tag erp-backend:${{ github.sha }} erp-backend:latest
+
+      - name: 📤 Deploy notification
+        run: |
+          echo "🚀 Deployment to ${{ github.event.inputs.environment || 'staging' }} completed successfully!"
+          echo "📊 Commit: ${{ github.sha }}"
+          echo "🕒 Time: $(date)"
+
+      # Ajoutez ici vos étapes de déploiement spécifiques
+      # Par exemple: push vers un registry Docker, déploiement sur AWS/Azure/GCP, etc.

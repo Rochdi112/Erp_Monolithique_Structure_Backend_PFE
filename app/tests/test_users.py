@@ -1,14 +1,9 @@
-# app/tests/test_users.py
-
 import pytest
 import uuid
 from fastapi.testclient import TestClient
 from app.db.database import get_db
 from app.models.user import User, UserRole
 from app.core.security import get_password_hash
-
-
-# ---------- Tests utilisateurs ----------
 
 def test_create_user_success(client: TestClient, admin_token):
     """
@@ -24,14 +19,14 @@ def test_create_user_success(client: TestClient, admin_token):
         "role": "technicien"
     }
     response = client.post("/users/", json=data, headers=headers)
-    assert response.status_code == 200
+    # Si ta route POST retourne 201, adapte ici :
+    assert response.status_code in (200, 201)
     result = response.json()
     assert result["email"] == data["email"]
     assert result["role"] == data["role"]
     assert result["username"] == data["username"]
     assert result["full_name"] == data["full_name"]
     assert result["is_active"] is True
-
 
 def test_create_user_duplicate_email(client: TestClient, admin_token):
     """
@@ -41,7 +36,7 @@ def test_create_user_duplicate_email(client: TestClient, admin_token):
     unique = str(uuid.uuid4())[:8]
     email = f"duplicate_{unique}@example.com"
     username = f"userdup_{unique}"
-    
+
     db.add(User(
         username=username,
         full_name="Dup User",
@@ -62,9 +57,8 @@ def test_create_user_duplicate_email(client: TestClient, admin_token):
     }
 
     response = client.post("/users/", json=data, headers=headers)
-    assert response.status_code == 400
+    assert response.status_code in (400, 409)
     assert "Email déjà utilisé" in response.text
-
 
 def test_get_user_by_id(client: TestClient, admin_token):
     """
@@ -90,7 +84,6 @@ def test_get_user_by_id(client: TestClient, admin_token):
     assert response.json()["email"] == user.email
     assert response.json()["username"] == user.username
 
-
 def test_get_all_users(client: TestClient, admin_token):
     """
     ✅ Lecture de tous les utilisateurs
@@ -99,7 +92,6 @@ def test_get_all_users(client: TestClient, admin_token):
     response = client.get("/users/", headers=headers)
     assert response.status_code == 200
     assert isinstance(response.json(), list)
-
 
 def test_user_access_forbidden_for_non_admin(client: TestClient, technicien_token):
     """

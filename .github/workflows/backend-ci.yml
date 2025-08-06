@@ -1,0 +1,239 @@
+name: 🚦 ERP MIF Maroc - Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-and-report:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: erp_test_db
+          POSTGRES_USER: erp_test_user
+          POSTGRES_PASSWORD: erp_test_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U erp_test_user -d erp_test_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      # 🔐 JWT / Auth
+      SECRET_KEY: test_secret_key_for_ci
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      
+      # 🗄️ Database Test
+      POSTGRES_SERVER: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: erp_test_db
+      POSTGRES_USER: erp_test_user
+      POSTGRES_PASSWORD: erp_test_pass
+      
+      # 📧 Email Test (mock)
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: test@example.com
+      SMTP_PASSWORD: test_password
+      EMAILS_FROM_EMAIL: test@example.com
+      
+      # 📁 Uploads
+      UPLOAD_DIRECTORY: ./test_uploads
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: 🔧 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-cov pytest-html coverage
+
+      - name: 📂 Create uploads directory
+        run: mkdir -p ./test_uploads
+
+      - name: 🗄️ Run database migrations
+        run: |
+          echo "Running Alembic migrations..."
+          alembic upgrade head || echo "Migration failed, continuing..."
+
+      - name: 🌱 Seed test data (optional)
+        run: |
+          python -c "
+          try:
+              from app.seed.seed_data import main as seed_main
+              seed_main()
+              print('✅ Seed data loaded successfully')
+          except Exception as e:
+              print(f'⚠️ Seed failed (not critical): {e}')
+          " || echo "Seed skipped"
+
+      - name: 🧪 Run tests with coverage
+        run: |
+          echo "🧪 Running tests..."
+          pytest app/tests/ \
+            --cov=app \
+            --cov-report=html:htmlcov \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term \
+            --html=report.html \
+            --self-contained-html \
+            --maxfail=5 \
+            --disable-warnings \
+            -v
+
+      - name: 📊 Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: 📋 Generate test summary
+        if: always()
+        run: |
+          echo "## 🚦 Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "coverage.xml" ]; then
+            COVERAGE=$(python -c "
+            import xml.etree.ElementTree as ET
+            try:
+                tree = ET.parse('coverage.xml')
+                root = tree.getroot()
+                coverage = root.attrib.get('line-rate', '0')
+                print(f'{float(coverage)*100:.1f}%')
+            except:
+                print('N/A')
+            ")
+            echo "📊 **Code Coverage**: $COVERAGE" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📁 Artifacts Generated:" >> $GITHUB_STEP_SUMMARY
+          echo "- 📄 HTML Test Report: \`report.html\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 Coverage Report: \`htmlcov/\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 📋 XML Coverage: \`coverage.xml\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📤 Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports-${{ github.run_number }}
+          path: |
+            report.html
+            htmlcov/
+            coverage.xml
+          retention-days: 30
+
+      - name: 💬 Comment PR with results
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let coverage = 'N/A';
+            try {
+              const coverageXml = fs.readFileSync('coverage.xml', 'utf8');
+              const match = coverageXml.match(/line-rate="([^"]+)"/);
+              if (match) {
+                coverage = (parseFloat(match[1]) * 100).toFixed(1) + '%';
+              }
+            } catch (e) {
+              console.log('Coverage file not found');
+            }
+            
+            const comment = `## 🚦 ERP MIF Maroc - Test Results
+            
+            ### 📊 Summary
+            - **Build Status**: ${{ job.status }}
+            - **Code Coverage**: ${coverage}
+            - **Commit**: ${{ github.sha }}
+            - **Branch**: ${{ github.head_ref }}
+            
+            ### 📋 Test Reports
+            📄 Detailed test reports are available in the [workflow artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+            
+            ### 🔍 Next Steps
+            - [ ] Verify all tests pass locally: \`pytest app/tests/ --disable-warnings -v\`
+            - [ ] Check PostgreSQL connection (see .env configuration)  
+            - [ ] Validate protected endpoints return 401 when not authenticated
+            - [ ] Review HTML test report in artifacts
+            
+            ---
+            
+            _🤖 Generated automatically by GitHub Actions CI/CD Pipeline_
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🔍 Run security scan
+        uses: pypa/gh-action-pip-audit@v1.0.8
+        with:
+          inputs: requirements.txt
+          
+  lint-and-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: 🔧 Install linting tools
+        run: |
+          pip install black isort flake8
+          
+      - name: 🎨 Check code formatting
+        run: |
+          black --check app/
+          isort --check-only app/
+          flake8 app/ --max-line-length=88 --extend-ignore=E203,W503

@@ -8,3 +8,7 @@ from .planning import Planning
 from .document import Document
 from .notification import Notification
 from .historique import HistoriqueIntervention
+from .client import Client
+from .contrat import Contrat, Facture, TypeContrat, StatutContrat
+from .stock import PieceDetachee, MouvementStock, InterventionPiece, TypeMouvement
+from .report import Report, ReportSchedule, ReportStatus, ReportType, ReportFormat

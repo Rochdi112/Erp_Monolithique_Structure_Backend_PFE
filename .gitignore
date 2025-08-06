@@ -33,3 +33,16 @@ app/static/uploads/
 *.egg
 *.egg-info/
 *.whl
+
+# 📊 Rapports et coverage
+reports/
+htmlcov/
+coverage.xml
+.coverage
+pytest-report.html
+report.html
+
+# 📁 Uploads et fichiers temporaires
+uploads/
+test_uploads/
+temp/

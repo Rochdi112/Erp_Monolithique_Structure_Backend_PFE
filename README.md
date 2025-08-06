@@ -1,5 +1,70 @@
 # ERP Interventions — Backend FastAPI (MVP1)
 
+[![CI/CD Pipeline](https://github.com/Rochdi112/Erp_Monolithique_Structure_Backend_PFE/actions/workflows/backend-ci.yml/badge.svg)](https://gi## 🧪 Tests unitaires
+
+L'ensemble du projet est testé avec **pytest** et **fixtures**.
+
+**Lancer tous les tests :**
+
+```bash
+pytest app/tests/ --disable-warnings -v
+```
+
+**Exemple de couverture validé à jour:**
+
+* `test_auth.py` (login, tokens, erreurs)
+* `test_users.py` (création, unicité, droits)
+* `test_equipements.py` (CRUD, droits)
+* `test_techniciens.py` (association compétence, droits)
+* etc.
+
+---
+
+## 🚦 CI/CD & Automatisation
+
+### GitHub Actions Pipeline
+
+Le projet dispose d'un pipeline CI/CD automatisé qui se lance à chaque push/PR :
+
+- ✅ **Tests automatisés** avec couverture de code
+- 🔍 **Analyse de sécurité** (pip-audit)
+- 🎨 **Vérification de la qualité** (Black, isort, Flake8)
+- 📊 **Rapports automatiques** en commentaire de PR
+- 🏷️ **Badges de statut** sur le README
+
+### Commandes locales (Makefile)
+
+```bash
+# 🔧 Valider l'environnement
+make validate
+
+# 🧪 Lancer les tests avec couverture
+make test-cov
+
+# 📊 Générer un rapport complet
+make report
+
+# 🎨 Formatter le code
+make format
+
+# 🔄 Pipeline complet (comme en CI)
+make ci
+```
+
+### Scripts utiles
+
+- `validate_env.py` - Vérifie que l'environnement est prêt
+- `generate_report.py` - Génère un rapport HTML de qualité
+- `.github/workflows/backend-ci.yml` - Pipeline GitHub Actions
+
+### Templates
+
+- **Pull Request** : Template standardisé avec checklist automatique
+- **Issues** : Templates pour bugs et nouvelles fonctionnalités
+- **Badges** : Statut CI, couverture, version Python...
+
+---Erp_Monolithique_Structure_Backend_PFE/actions/workflows/backend-ci.yml)
+[![codecov](https://codecov.io/gh/Rochdi112/Erp_Monolithique_Structure_Backend_PFE/branch/main/graph/badge.svg)](https://codecov.io/gh/Rochdi112/Erp_Monolithique_Structure_Backend_PFE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green.svg)](https://fastapi.tiangolo.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-blue.svg)](https://www.postgresql.org/)
@@ -17,6 +82,7 @@
 - [Endpoints principaux](#endpoints-principaux)
 - [Jeux de données de démarrage (seed)](#jeux-de-données-de-démarrage-seed)
 - [Tests unitaires](#tests-unitaires)
+- [CI/CD & Automatisation](#cicd--automatisation)
 - [Déploiement (Docker)](#déploiement-docker)
 - [Crédits](#crédits)
 

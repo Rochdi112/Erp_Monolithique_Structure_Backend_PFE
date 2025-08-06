@@ -1,16 +1,20 @@
-# app/schemas/__init__.py
+"""
+Schemas Pydantic pour l'API
+"""
 
-from .user import UserBase, UserCreate, UserOut, UserRole, TokenRequest, TokenResponse
-from .technicien import TechnicienBase, TechnicienCreate, TechnicienOut, CompetenceBase, CompetenceCreate, CompetenceOut
-from .equipement import EquipementBase, EquipementCreate, EquipementOut
-from .intervention import (
-    InterventionBase,
-    InterventionCreate,
-    InterventionOut,
-    InterventionType,
-    StatutIntervention
+# Import des schémas utilisateurs
+from .user import UserCreate, UserOut, UserRole, UserUpdate, TokenRequest, TokenResponse
+
+# Import des schémas contrats
+from .contrat import (
+    ContratCreate, ContratOut, ContratUpdate, ContratSummary, ContratStats,
+    TypeContrat, StatutContrat, ModePaiement,
+    FactureCreate, FactureOut, FactureUpdate, StatutFacture,
+    ContratRenouvellement, ContratResiliation
 )
-from .planning import PlanningBase, PlanningCreate, PlanningOut
-from .document import DocumentBase, DocumentCreate, DocumentOut
-from .notification import NotificationBase, NotificationCreate, NotificationOut
-from .historique import HistoriqueBase, HistoriqueCreate, HistoriqueOut
+
+# Import des autres schémas existants
+# Note: Autres schémas disponibles mais non importés automatiquement :
+# - technicien, client, equipement, intervention, planning
+# - document, notification, historique, stock
+# - dashboard, report

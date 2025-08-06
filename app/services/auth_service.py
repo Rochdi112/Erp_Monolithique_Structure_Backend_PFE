@@ -8,12 +8,20 @@ from app.core.security import verify_password, create_access_token
 
 def authenticate_user(db: Session, email: str, password: str) -> TokenResponse:
     """
-    Authentifie un utilisateur avec son email et mot de passe.
-    Retourne un Token JWT en cas de succès.
+    Authentifie un utilisateur avec email et mot de passe.
+    Retourne un JWT Token si succès.
+
+    Args:
+        db (Session): Session SQLAlchemy.
+        email (str): Email de l'utilisateur.
+        password (str): Mot de passe brut.
+
+    Returns:
+        TokenResponse: Token JWT pour accès API.
 
     Raises:
-        HTTPException: 401 si utilisateur introuvable ou mot de passe invalide.
-        HTTPException: 403 si utilisateur désactivé.
+        HTTPException: 401 si credentials invalides.
+        HTTPException: 403 si compte désactivé.
     """
     user = db.query(User).filter(User.email == email).first()
 
@@ -30,7 +38,12 @@ def authenticate_user(db: Session, email: str, password: str) -> TokenResponse:
         )
 
     access_token = create_access_token(
-        data={"sub": user.email, "role": user.role, "user_id": user.id}
+        data={
+            "sub": user.email,    # Identifiant principal (RFC JWT)
+            "role": user.role,    # Rôle RBAC
+            "user_id": user.id    # Id utilisateur unique (utile pour tracking)
+        }
     )
 
-    return TokenResponse(access_token=access_token)
+    # ✅ Correction : retourner aussi token_type="bearer" pour compatibilité Pydantic/Swagger
+    return TokenResponse(access_token=access_token, token_type="bearer")

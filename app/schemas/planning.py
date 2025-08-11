@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, field_serializer, ConfigDict
 from typing import Optional
 from datetime import datetime
 from app.db.database import Base
@@ -38,8 +38,8 @@ class PlanningOut(PlanningBase):
     equipement_id: int
     date_creation: datetime
 
-    class Config:
-        orm_mode = True
+    # Pydantic v2 model config (replaces class Config with orm_mode=True)
+    model_config = ConfigDict(from_attributes=True)
 
     # Pydantic v2 field serializer to expose feminine labels expected by tests
     @field_serializer('frequence')

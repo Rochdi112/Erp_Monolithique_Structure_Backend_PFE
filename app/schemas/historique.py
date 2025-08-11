@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 from app.schemas.intervention import StatutIntervention
@@ -41,5 +41,4 @@ class HistoriqueOut(HistoriqueBase):
     intervention_id: int
     user: UserOut
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

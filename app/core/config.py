@@ -1,6 +1,6 @@
 # app/core/config.py
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
 
@@ -30,10 +30,12 @@ class Settings(BaseSettings):
     # Répertoire d’upload de fichiers
     UPLOAD_DIRECTORY: str = Field(default="app/static/uploads")
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "forbid"  # empêche l’utilisation de variables non déclarées
+    # Pydantic v2 settings configuration
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="forbid",  # empêche l’utilisation de variables non déclarées
+    )
 
 
 settings = Settings()

@@ -1,6 +1,6 @@
 # app/schemas/intervention.py
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 from enum import Enum
@@ -34,10 +34,12 @@ class InterventionBase(BaseModel):
     urgence: Optional[bool] = False
     date_limite: Optional[datetime] = None
 
-    class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
-        populate_by_name = True  # <- important pour une compatibilité parfaite
+    # Pydantic v2 model configuration
+    model_config = ConfigDict(
+        from_attributes=True,
+        validate_by_name=True,  # replaces allow_population_by_field_name
+        populate_by_name=True,
+    )
 
 class InterventionCreate(InterventionBase):
     technicien_id: Optional[int] = None

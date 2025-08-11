@@ -1,14 +1,28 @@
 # app/main.py
 
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 
-# Création de l'application FastAPI
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    print(f"🚀 {settings.PROJECT_NAME} démarré!")
+    print(f"📚 Documentation disponible sur: http://localhost:8000/docs")
+    try:
+        yield
+    finally:
+        # Shutdown
+        print("👋 Arrêt de l'application...")
+
+
+# Création de l'application FastAPI avec gestionnaire de cycle de vie
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version="1.0.0",
-    description="Backend ERP pour la gestion des interventions industrielles"
+    description="Backend ERP pour la gestion des interventions industrielles",
+    lifespan=lifespan,
 )
 
 # Configuration CORS
@@ -68,12 +82,4 @@ def health_check():
         "service": "ERP Backend API"
     }
 
-# Événements de démarrage/arrêt
-@app.on_event("startup")
-async def startup_event():
-    print(f"🚀 {settings.PROJECT_NAME} démarré!")
-    print(f"📚 Documentation disponible sur: http://localhost:8000/docs")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    print("👋 Arrêt de l'application...")
+ # Les événements startup/shutdown sont maintenant gérés par lifespan ci-dessus

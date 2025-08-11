@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 from app.db.database import Base
@@ -37,7 +37,8 @@ class DocumentOut(DocumentBase):
     date_upload: datetime
     intervention_id: int
 
-    class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
-        populate_by_name = True
+    model_config = ConfigDict(
+        from_attributes=True,
+        validate_by_name=True,
+        populate_by_name=True,
+    )

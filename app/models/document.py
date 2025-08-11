@@ -23,6 +23,8 @@ class Document(Base):
     - Préparé pour extension (audit, typage, versioning)
     """
     __tablename__ = "documents"
+    # Autorise les annotations non-Mapped legacy (compat SQLAlchemy 2.0)
+    __allow_unmapped__ = True
     __table_args__ = (
         Index('idx_document_intervention_upload', 'intervention_id', 'date_upload'),
     )

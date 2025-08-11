@@ -8,21 +8,22 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "ERP Interventions"
     API_V1_STR: str = "/api/v1"
 
-    SECRET_KEY: str
+    # Security
+    SECRET_KEY: str = Field(default="insecure-test-secret-key")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60  # durée de validité JWT en minutes
 
     # Email SMTP
-    SMTP_HOST: str
-    SMTP_PORT: int
-    SMTP_USER: str
-    SMTP_PASSWORD: str
-    EMAILS_FROM_EMAIL: str
+    SMTP_HOST: str = Field(default="localhost")
+    SMTP_PORT: int = Field(default=1025)  # Mailhog/Mailcatcher default
+    SMTP_USER: str = Field(default="user")
+    SMTP_PASSWORD: str = Field(default="password")
+    EMAILS_FROM_EMAIL: str = Field(default="no-reply@example.com")
 
     # Base de données PostgreSQL
-    POSTGRES_DB: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str = Field(default="app")
+    POSTGRES_USER: str = Field(default="postgres")
+    POSTGRES_PASSWORD: str = Field(default="postgres")
     POSTGRES_SERVER: str = "db"
     POSTGRES_PORT: str = "5432"
 

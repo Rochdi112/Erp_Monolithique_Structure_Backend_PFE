@@ -8,9 +8,9 @@ def create_equipement(db: Session, data: EquipementCreate) -> Equipement:
         raise HTTPException(status_code=400, detail="Équipement déjà existant")
     equipement = Equipement(
         nom=data.nom,
-        type=data.type,
+        type_equipement=data.type,
         localisation=data.localisation,
-        frequence_entretien=data.frequence_entretien
+        frequence_entretien_jours=int(data.frequence_entretien) if data.frequence_entretien is not None else None,
     )
     db.add(equipement)
     db.commit()

@@ -2,7 +2,7 @@
 
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.models.technicien import Technicien, Competence
+from app.models.technicien import Technicien, Competence, DisponibiliteTechnicien
 from app.models.user import User, UserRole
 from app.schemas.technicien import TechnicienCreate, CompetenceCreate
 
@@ -18,10 +18,18 @@ def create_technicien(db: Session, data: TechnicienCreate) -> Technicien:
     if user.role != UserRole.technicien:
         raise HTTPException(status_code=400, detail="L'utilisateur n’est pas un technicien")
 
+    dispo_value = data.disponibilite
+    if isinstance(dispo_value, str):
+        # normalise en minuscule et mappe si possible
+        lower = dispo_value.strip().lower()
+        try:
+            dispo_value = DisponibiliteTechnicien(lower)
+        except Exception:
+            dispo_value = DisponibiliteTechnicien.disponible
     technicien = Technicien(
         user_id=data.user_id,
         equipe=data.equipe,
-        disponibilite=data.disponibilite
+        disponibilite=dispo_value
     )
 
     if data.competences_ids:

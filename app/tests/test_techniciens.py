@@ -23,7 +23,7 @@ def create_user_with_role(db: Session, role: UserRole, suffix: str = "") -> User
     return user
 
 def create_competence(db: Session, nom: str) -> Competence:
-    comp = Competence(nom=nom)
+    comp = Competence(nom=nom, domaine="general")
     db.add(comp)
     db.commit()
     db.refresh(comp)

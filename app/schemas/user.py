@@ -3,6 +3,7 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 from enum import Enum
 from typing import Optional
+from datetime import datetime
 
 # ===============================
 # 🎯 ENUM des rôles utilisateur
@@ -58,8 +59,8 @@ class UserOut(UserBase):
     """
     id: int
     is_active: bool
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)  # Active l'ORM mode pour SQLAlchemy
 

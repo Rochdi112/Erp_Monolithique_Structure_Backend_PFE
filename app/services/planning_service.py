@@ -19,8 +19,27 @@ def create_planning(db: Session, data: PlanningCreate) -> Planning:
     if not equipement:
         raise HTTPException(status_code=404, detail="Équipement introuvable")
 
+    # Normalise la fréquence reçue (str) vers l'enum
+    from app.models.planning import FrequencePlanning
+    key = str(data.frequence).strip().lower()
+    mapping = {
+        "journalier": FrequencePlanning.journalier,
+        "hebdomadaire": FrequencePlanning.hebdomadaire,
+        "mensuel": FrequencePlanning.mensuel,
+        "mensuelle": FrequencePlanning.mensuel,
+        "trimestriel": FrequencePlanning.trimestriel,
+        "trimestrielle": FrequencePlanning.trimestriel,
+        "semestriel": FrequencePlanning.semestriel,
+        "semestrielle": FrequencePlanning.semestriel,
+        "annuel": FrequencePlanning.annuel,
+        "annuelle": FrequencePlanning.annuel,
+    }
+    freq_enum = mapping.get(key)
+    if freq_enum is None:
+        raise HTTPException(status_code=400, detail="Fréquence invalide")
+
     planning = Planning(
-        frequence=data.frequence,
+        frequence=freq_enum,
         prochaine_date=data.prochaine_date,
         derniere_date=data.derniere_date,
         equipement_id=data.equipement_id,
@@ -68,3 +87,34 @@ def update_planning_dates(db: Session, planning_id: int, nouvelle_date: datetime
     db.commit()
     db.refresh(planning)
     return planning
+
+def update_planning_frequence(db: Session, planning_id: int, frequence: str) -> Planning:
+    """
+    Met à jour la fréquence d'un planning. Accepte une chaîne brute depuis l'API.
+    """
+    planning = get_planning_by_id(db, planning_id)
+    if frequence:
+        # Normalise et map vers l'enum FrequencePlanning si possible
+        from app.models.planning import FrequencePlanning
+        key = str(frequence).strip().lower()
+        mapping = {
+            "journalier": FrequencePlanning.journalier,
+            "hebdomadaire": FrequencePlanning.hebdomadaire,
+            "mensuel": FrequencePlanning.mensuel,
+            "mensuelle": FrequencePlanning.mensuel,
+            "trimestriel": FrequencePlanning.trimestriel,
+            "trimestrielle": FrequencePlanning.trimestriel,
+            "semestriel": FrequencePlanning.semestriel,
+            "semestrielle": FrequencePlanning.semestriel,
+            "annuel": FrequencePlanning.annuel,
+            "annuelle": FrequencePlanning.annuel,
+        }
+        planning.frequence = mapping.get(key, planning.frequence)
+    db.commit()
+    db.refresh(planning)
+    return planning
+
+def delete_planning(db: Session, planning_id: int) -> None:
+    planning = get_planning_by_id(db, planning_id)
+    db.delete(planning)
+    db.commit()

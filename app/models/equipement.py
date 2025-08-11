@@ -87,6 +87,8 @@ class Equipement(Base):
     - Propriétés calculées mises en cache applicatif
     """
     __tablename__ = "equipements"
+    # Autorise les annotations non-Mapped legacy (compat SQLAlchemy 2.0)
+    __allow_unmapped__ = True
 
     # NOTE: Index composites pour requêtes métier fréquentes
     __table_args__ = (
@@ -150,7 +152,7 @@ class Equipement(Base):
     
     contrat: Optional["Contrat"] = relationship(
         "Contrat", 
-        back_populates="equipements",
+    back_populates="equipements",
         lazy="select"
     )
     
@@ -168,7 +170,7 @@ class Equipement(Base):
         back_populates="equipement", 
         cascade="all, delete-orphan",
         lazy="dynamic",
-        order_by="Planning.date_prevue"
+    order_by="Planning.prochaine_date"
     )
 
     def __repr__(self) -> str:
@@ -177,10 +179,71 @@ class Equipement(Base):
 
     # 🏷️ Propriétés métier et calculs KPI
 
+    # Compatibilité: accepter des kwargs legacy comme 'type' et 'frequence_maintenance'
+    def __init__(self, **kwargs):  # type: ignore[override]
+        # Mappe JSON 'type' -> attribut ORM 'type_equipement'
+        t = kwargs.pop("type", None)
+        if t is not None and "type_equipement" not in kwargs:
+            kwargs["type_equipement"] = t
+
+        # Supporte différents alias pour la fréquence:
+        # - frequence_entretien (API)
+        # - frequence_maintenance (tests planning)
+        freq = None
+        if "frequence_entretien" in kwargs:
+            freq = kwargs.pop("frequence_entretien")
+        if "frequence_maintenance" in kwargs and freq is None:
+            freq = kwargs.pop("frequence_maintenance")
+
+        if freq is not None and "frequence_entretien_jours" not in kwargs:
+            # Convertit en nombre de jours si possible
+            def _normalize_text(x: str) -> str:
+                s = str(x).strip().lower()
+                for a, b in (
+                    ("é", "e"), ("è", "e"), ("ê", "e"), ("ë", "e"),
+                    ("à", "a"), ("â", "a"), ("ä", "a"), ("ô", "o"), ("ö", "o"),
+                    ("û", "u"), ("ü", "u"), ("î", "i"), ("ï", "i"), ("ç", "c"),
+                ):
+                    s = s.replace(a, b)
+                return s
+
+            days = None
+            try:
+                # si "30" -> 30
+                days = int(str(freq))
+            except Exception:
+                label = _normalize_text(str(freq))
+                mapping = {
+                    "hebdomadaire": 7,
+                    "bimensuelle": 15,
+                    "mensuelle": 30,
+                    "mensuel": 30,
+                    "trimestrielle": 90,
+                    "semestrielle": 180,
+                    "annuelle": 365,
+                    "annuel": 365,
+                }
+                days = mapping.get(label)
+            if days is not None:
+                kwargs["frequence_entretien_jours"] = days
+
+        # Affectation standard
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
     @property
     def est_operationnel(self) -> bool:
         """Vérifie si l'équipement est opérationnel."""
         return self.statut == StatutEquipement.operationnel
+
+    # --- Compatibilité champs legacy attendus par schémas/tests ---
+    @property
+    def type(self) -> str:
+        return self.type_equipement
+
+    @property
+    def frequence_entretien(self) -> Optional[str]:
+        return str(self.frequence_entretien_jours) if self.frequence_entretien_jours is not None else None
 
     @property
     def est_en_panne(self) -> bool:

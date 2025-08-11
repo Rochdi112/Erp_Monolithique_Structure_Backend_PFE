@@ -40,6 +40,8 @@ class NotificationOut(NotificationBase):
     intervention_id: int
     user_id: int
 
-    class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+    # Pydantic v2 config for from_attributes + validate by field name
+    model_config = {
+        "from_attributes": True,
+        "validate_by_name": True,
+    }

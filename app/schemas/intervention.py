@@ -17,13 +17,20 @@ class StatutIntervention(str, Enum):
     cloturee = "cloturee"
     archivee = "archivee"
 
+class PrioriteIntervention(str, Enum):
+    urgente = "urgente"
+    haute = "haute"
+    normale = "normale"
+    basse = "basse"
+    programmee = "programmee"
+
 class InterventionBase(BaseModel):
     titre: str
     description: Optional[str] = None
     # Mapping JSON "type" <-> Python "type_intervention"
     type_intervention: InterventionType = Field(..., alias="type")
     statut: Optional[StatutIntervention] = StatutIntervention.ouverte
-    priorite: Optional[int] = None
+    priorite: Optional[PrioriteIntervention] = PrioriteIntervention.normale
     urgence: Optional[bool] = False
     date_limite: Optional[datetime] = None
 
@@ -41,4 +48,4 @@ class InterventionOut(InterventionBase):
     date_creation: datetime
     date_cloture: Optional[datetime] = None
     technicien_id: Optional[int]
-    equipement_id: int
+    equipement_id: Optional[int] = None

@@ -88,6 +88,8 @@ class Client(Base):
     - Propriétés calculées pour KPI commerciaux
     """
     __tablename__ = "clients"
+    # Autorise les annotations non-Mapped legacy (compat SQLAlchemy 2.0)
+    __allow_unmapped__ = True
 
     # NOTE: Index composites pour requêtes commerciales fréquentes
     __table_args__ = (

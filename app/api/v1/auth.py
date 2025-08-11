@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Form
 from sqlalchemy.orm import Session
-from app.services.auth_service import authenticate_user
-from app.db.database import SessionLocal
+from app.services.auth_service import authenticate_user, authenticate_user_by_username
+from app.db.database import get_db
 from app.schemas.user import TokenResponse, UserOut
 from app.core.rbac import get_current_user
 
@@ -11,12 +11,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}}
 )
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# utilise le get_db central (surchargé dans les tests)
 
 @router.post(
     "/token",
@@ -36,6 +31,22 @@ def login(
     - Utilisé dans le header `Authorization: Bearer <token>`
     """
     return authenticate_user(db, email, password)
+
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    summary="Connexion utilisateur (username/password)",
+    description="Authentifie un utilisateur avec username + mot de passe. Retourne un token JWT si valide."
+)
+def login_username(
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint de login via username pour compatibilité avec certains tests.
+    """
+    return authenticate_user_by_username(db, username, password)
 
 # ======= ROUTE /me (infos utilisateur courant via JWT) =========
 

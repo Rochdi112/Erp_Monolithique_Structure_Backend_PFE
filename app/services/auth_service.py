@@ -47,3 +47,29 @@ def authenticate_user(db: Session, email: str, password: str) -> TokenResponse:
 
     # ✅ Correction : retourner aussi token_type="bearer" pour compatibilité Pydantic/Swagger
     return TokenResponse(access_token=access_token, token_type="bearer")
+
+def authenticate_user_by_username(db: Session, username: str, password: str) -> TokenResponse:
+    """
+    Authentifie via username + password (compatibilité tests legacy).
+
+    Retourne un JWT identique à authenticate_user.
+    """
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not verify_password(password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Identifiants invalides"
+        )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Compte désactivé"
+        )
+    access_token = create_access_token(
+        data={
+            "sub": user.email,
+            "role": user.role,
+            "user_id": user.id,
+        }
+    )
+    return TokenResponse(access_token=access_token, token_type="bearer")

@@ -169,6 +169,8 @@ class Technicien(Base):
     - Propriétés calculées pour KPI de performance
     """
     __tablename__ = "techniciens"
+    # Autorise les annotations non-Mapped legacy (compat SQLAlchemy 2.0)
+    __allow_unmapped__ = True
 
     # NOTE: Index composites pour optimiser affectations et planning
     __table_args__ = (

@@ -12,7 +12,7 @@ from app.services.equipement_service import (
 from app.core.rbac import responsable_required
 
 router = APIRouter(
-    prefix="/api/v1/equipements",
+    prefix="/equipements",
     tags=["equipements"],
     responses={404: {"description": "Équipement non trouvé"}}
 )

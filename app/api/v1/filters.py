@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from app.db.database import SessionLocal
+from app.db.database import get_db
 from app.models.intervention import Intervention, StatutIntervention, InterventionType
 from app.schemas.intervention import InterventionOut
 from app.core.rbac import get_current_user  # Authentification requise
@@ -15,12 +15,7 @@ router = APIRouter(
 )
 
 # Dépendance DB
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# utilise get_db central
 
 @router.get(
     "/interventions",
@@ -43,7 +38,8 @@ def filter_interventions(
     if urgence is not None:
         query = query.filter(Intervention.urgence == urgence)
     if type:
-        query = query.filter(Intervention.type == type)
+        # Attribut ORM est 'type_intervention' (colonne DB 'type')
+        query = query.filter(Intervention.type_intervention == type)
     if technicien_id:
         query = query.filter(Intervention.technicien_id == technicien_id)
 

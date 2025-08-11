@@ -1,14 +1,14 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from app.db.database import SessionLocal
+from app.db.database import get_db
 from app.services.user_service import (
     create_user, get_user_by_id, get_all_users, update_user,
     deactivate_user, reactivate_user
 )
 from app.schemas.user import UserCreate, UserOut, UserUpdate
-from app.core.rbac import admin_required
-from app.core.security import get_current_user
+from app.core.rbac import admin_required, get_current_user
+from app.services.user_service import get_user_by_email
 
 router = APIRouter(
     prefix="/users",
@@ -16,12 +16,7 @@ router = APIRouter(
     responses={404: {"description": "Utilisateur non trouvé"}}
 )
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# get_db importé depuis app.db.database (compatible avec les overrides de tests)
 
 @router.post(
     "/",
@@ -63,9 +58,19 @@ def list_users(db: Session = Depends(get_db)):
     summary="Voir son profil",
     description="Retourne le profil de l'utilisateur connecté.",
 )
-def get_my_profile(current_user: UserOut = Depends(get_current_user)):
+def get_my_profile(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Voir son propre profil (self-service)."""
-    return current_user
+    email = None
+    if isinstance(current_user, dict):
+        email = current_user.get("email")
+    else:
+        email = getattr(current_user, "email", None)
+    if not email:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    user = get_user_by_email(db, email)
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    return user
 
 @router.put(
     "/update",
@@ -76,10 +81,21 @@ def get_my_profile(current_user: UserOut = Depends(get_current_user)):
 def update_my_profile(
     update_data: UserUpdate,
     db: Session = Depends(get_db),
-    current_user: UserOut = Depends(get_current_user)
+    current_user = Depends(get_current_user)
 ):
     """Mise à jour profil user connecté."""
-    return update_user(db, current_user.id, update_data)
+    # Supporte current_user dict ou objet
+    email = None
+    if isinstance(current_user, dict):
+        email = current_user.get("email")
+    else:
+        email = getattr(current_user, "email", None)
+    if not email:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    user = get_user_by_email(db, email)
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    return update_user(db, user.id, update_data)
 
 @router.delete(
     "/{user_id}",

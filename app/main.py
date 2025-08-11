@@ -32,8 +32,13 @@ try:
     api_prefix = settings.API_V1_STR
     
     app.include_router(auth.router, prefix=api_prefix)
+    # Compat tests: expose auth also at root (no /api/v1) for /auth/token calls
+    app.include_router(auth.router)
     app.include_router(users.router, prefix=api_prefix)
     app.include_router(techniciens.router, prefix=api_prefix)
+    # Compat tests: expose some routers also at root (tests call /users and /techniciens)
+    app.include_router(users.router)
+    app.include_router(techniciens.router)
     app.include_router(equipements.router, prefix=api_prefix)
     app.include_router(interventions.router, prefix=api_prefix)
     app.include_router(planning.router, prefix=api_prefix)

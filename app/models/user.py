@@ -74,6 +74,8 @@ class User(Base):
     - Propriétés calculées mises en cache côté application
     """
     __tablename__ = "users"
+    # Autorise les annotations non-Mapped legacy (compat SQLAlchemy 2.0)
+    __allow_unmapped__ = True
 
     # NOTE: Index composites pour optimiser les requêtes fréquentes
     __table_args__ = (
@@ -88,7 +90,7 @@ class User(Base):
 
     # Informations d'identification
     username = Column(String(100), unique=True, index=True, nullable=False)
-    full_name = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=True)
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
 
@@ -131,7 +133,7 @@ class User(Base):
         back_populates="user", 
         cascade="all, delete-orphan",
         lazy="dynamic",
-        order_by="desc(Notification.created_at)"
+    order_by="desc(Notification.date_envoi)"
     )
     
     historiques = relationship(
@@ -148,6 +150,28 @@ class User(Base):
         cascade="all, delete-orphan",
         lazy="dynamic",
         order_by="desc(MouvementStock.date_mouvement)"
+    )
+
+    # Rapports générés par l'utilisateur (1:N)
+    reports_created = relationship(
+        "Report",
+        back_populates="created_by",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
+
+    report_templates_created = relationship(
+        "ReportTemplate",
+        back_populates="created_by",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
+
+    report_schedules_created = relationship(
+        "ReportSchedule",
+        back_populates="created_by",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:

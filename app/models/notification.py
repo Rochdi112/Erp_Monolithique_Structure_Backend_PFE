@@ -38,6 +38,8 @@ class Notification(Base):
     - Préparé pour extension (statut, lecture, audit)
     """
     __tablename__ = "notifications"
+    # Autorise les annotations non-Mapped legacy (compat SQLAlchemy 2.0)
+    __allow_unmapped__ = True
     __table_args__ = (
         Index('idx_notification_user_intervention', 'user_id', 'intervention_id'),
         Index('idx_notification_date', 'date_envoi'),

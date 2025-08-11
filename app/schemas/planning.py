@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 from typing import Optional
 from datetime import datetime
 from app.db.database import Base
@@ -40,3 +40,18 @@ class PlanningOut(PlanningBase):
 
     class Config:
         orm_mode = True
+
+    # Pydantic v2 field serializer to expose feminine labels expected by tests
+    @field_serializer('frequence')
+    def serialize_frequence(self, v):
+        # v may be enum or string
+        val = getattr(v, 'value', v)
+        mapping = {
+            'mensuel': 'mensuelle',
+            'trimestriel': 'trimestrielle',
+            'semestriel': 'semestrielle',
+            'annuel': 'annuelle',
+            'hebdomadaire': 'hebdomadaire',
+            'journalier': 'journalier',
+        }
+        return mapping.get(val, val)

@@ -25,6 +25,8 @@ class HistoriqueIntervention(Base):
     - Préparé pour extension (audit, suppression logique, RGPD)
     """
     __tablename__ = "historiques_interventions"
+    # Autorise les annotations non-Mapped legacy (compat SQLAlchemy 2.0)
+    __allow_unmapped__ = True
     __table_args__ = (
         Index('idx_historique_intervention', 'intervention_id', 'user_id', 'horodatage'),
     )

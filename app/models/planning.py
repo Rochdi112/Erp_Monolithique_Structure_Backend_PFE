@@ -46,6 +46,8 @@ class Planning(Base):
     - (Futur) 1:N avec Interventions générées
     """
     __tablename__ = "plannings"
+    # Autorise les annotations non-Mapped legacy (compat SQLAlchemy 2.0)
+    __allow_unmapped__ = True
     __table_args__ = (
         Index('idx_planning_equipement_frequence', 'equipement_id', 'frequence'),
         Index('idx_planning_statut_prochaine', 'statut', 'prochaine_date'),

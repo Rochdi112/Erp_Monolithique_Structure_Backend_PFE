@@ -57,6 +57,8 @@ class Contrat(Base):
     - Préparé pour extension (audit, renouvellement, logs)
     """
     __tablename__ = "contrats"
+    # Autorise les annotations non-Mapped legacy (compat SQLAlchemy 2.0)
+    __allow_unmapped__ = True
     __table_args__ = (
         Index('idx_contrat_client_dates', 'client_id', 'date_debut', 'date_fin'),
         Index('idx_contrat_statut', 'statut'),
@@ -100,6 +102,12 @@ class Contrat(Base):
 
     client_id: int = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, index=True)
     client: "Client" = relationship("Client", back_populates="contrats", lazy="joined")
+    equipements = relationship(
+        "Equipement",
+        back_populates="contrat",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
     interventions = relationship(
         "Intervention",
         back_populates="contrat",
@@ -229,6 +237,8 @@ class Facture(Base):
     - Préparé pour extension (audit, relance, logs)
     """
     __tablename__ = "factures"
+    # Autorise les annotations non-Mapped legacy (compat SQLAlchemy 2.0)
+    __allow_unmapped__ = True
     __table_args__ = (
         Index('idx_facture_contrat_echeance', 'contrat_id', 'date_echeance'),
         Index('idx_facture_statut', 'statut_paiement'),

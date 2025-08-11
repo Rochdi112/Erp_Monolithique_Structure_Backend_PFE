@@ -6,7 +6,8 @@ uvicorn[standard]      # Serveur ASGI avec reload, color, etc.
 sqlalchemy>=1.4
 alembic                # Migrations
 psycopg2-binary        # PostgreSQL
-
+sqlalchemy-utils       # Utilitaires SQLAlchemy
+SQLAlchemy
 # --- Sécurité / Auth ---
 python-jose[cryptography]   # JWT (obligatoire, version jose officielle)
 passlib[bcrypt]             # Hashing sécurisé (mot de passe)
